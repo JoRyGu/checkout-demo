@@ -51,6 +51,7 @@ export class CloudStack extends cdk.Stack {
     const clientBucket = new Bucket(this, 'CheckoutDemoClientBucket', {
       bucketName: 'checkout-demo-client-bucket',
       accessControl: BucketAccessControl.PRIVATE,
+      publicReadAccess: true,
     });
 
     new BucketDeployment(this, 'CheckoutDemoClientBucketDeployment', {
