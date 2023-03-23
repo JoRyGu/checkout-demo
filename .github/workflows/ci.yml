@@ -42,5 +42,5 @@ jobs:
       - name: Install Deps
         run: pnpm install
 
-      - name: Deploy
-        run: pnpm exec turbo deploy
+      - name: Build and Deploy
+        run: pnpm exec turbo run build deploy
