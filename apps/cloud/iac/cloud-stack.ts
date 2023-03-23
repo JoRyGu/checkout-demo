@@ -10,6 +10,8 @@ import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { Construct } from 'constructs';
 import { Duration } from 'aws-cdk-lib';
+import { Bucket, BucketAccessControl } from 'aws-cdk-lib/aws-s3';
+import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
 
 export class CloudStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -45,5 +47,15 @@ export class CloudStack extends cdk.Stack {
       'POST',
       redirectLambdaIntegration
     );
+
+    const clientBucket = new Bucket(this, 'CheckoutDemoClientBucket', {
+      bucketName: 'CheckoutDemoClientBucket',
+      accessControl: BucketAccessControl.PRIVATE,
+    });
+
+    new BucketDeployment(this, 'CheckoutDemoClientBucketDeployment', {
+      destinationBucket: clientBucket,
+      sources: [Source.asset(path.resolve('../client/dist'))],
+    });
   }
 }
