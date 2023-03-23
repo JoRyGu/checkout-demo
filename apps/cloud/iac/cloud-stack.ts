@@ -58,5 +58,16 @@ export class CloudStack extends cdk.Stack {
       destinationBucket: clientBucket,
       sources: [Source.asset(path.resolve('../client/dist'))],
     });
+
+    const adminBucket = new Bucket(this, 'CheckoutDemoAdminBucket', {
+      bucketName: 'checkout-demo-admin-bucket',
+      publicReadAccess: true,
+      websiteIndexDocument: 'index.html',
+    });
+
+    new BucketDeployment(this, 'CheckoutDemoAdminBucketDeployment', {
+      destinationBucket: adminBucket,
+      sources: [Source.asset(path.resolve('../admin-client/dist'))],
+    });
   }
 }
