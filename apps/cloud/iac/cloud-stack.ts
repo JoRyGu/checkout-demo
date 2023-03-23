@@ -49,7 +49,7 @@ export class CloudStack extends cdk.Stack {
     );
 
     const clientBucket = new Bucket(this, 'CheckoutDemoClientBucket', {
-      bucketName: 'CheckoutDemoClientBucket',
+      bucketName: 'checkout-demo-client-bucket',
       accessControl: BucketAccessControl.PRIVATE,
     });
 

@@ -5,7 +5,6 @@
     "cloud": "bin/cloud.js"
   },
   "scripts": {
-    "build": "tsc",
     "watch": "tsc -w",
     "test": "jest",
     "cdk": "cdk",
