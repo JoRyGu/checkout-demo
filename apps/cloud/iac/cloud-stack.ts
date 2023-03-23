@@ -39,7 +39,8 @@ export class CloudStack extends cdk.Stack {
     });
 
     const redirectLambdaIntegration = new LambdaIntegration(redirectLambda);
-    const redirectGatewayResource = restApi.root.addResource('checkout');
+    const redirectApiResource = restApi.root.addResource('api');
+    const redirectGatewayResource = redirectApiResource.addResource('checkout');
     const redirectGatewayMethod = redirectGatewayResource.addMethod(
       'POST',
       redirectLambdaIntegration
