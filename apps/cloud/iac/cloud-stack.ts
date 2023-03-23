@@ -1,6 +1,11 @@
 import * as path from 'node:path';
 import * as cdk from 'aws-cdk-lib';
-import { Cors, LambdaIntegration, RestApi } from 'aws-cdk-lib/aws-apigateway';
+import {
+  Cors,
+  EndpointType,
+  LambdaIntegration,
+  RestApi,
+} from 'aws-cdk-lib/aws-apigateway';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { Construct } from 'constructs';
@@ -16,6 +21,9 @@ export class CloudStack extends cdk.Stack {
         allowOrigins: Cors.ALL_ORIGINS,
         allowMethods: Cors.ALL_METHODS,
         allowHeaders: Cors.DEFAULT_HEADERS,
+      },
+      endpointConfiguration: {
+        types: [EndpointType.REGIONAL],
       },
     });
 
