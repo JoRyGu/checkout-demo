@@ -11,7 +11,7 @@ export class CloudStack extends cdk.Stack {
     super(scope, id, props);
 
     const restApi = new RestApi(this, 'CheckoutDemoRestApi', {
-      restApiName: 'Checkout Demo',
+      restApiName: 'CheckoutDemo',
       defaultCorsPreflightOptions: {
         allowOrigins: Cors.ALL_ORIGINS,
         allowMethods: Cors.ALL_METHODS,
@@ -20,7 +20,7 @@ export class CloudStack extends cdk.Stack {
     });
 
     const redirectLambda = new NodejsFunction(this, 'CheckoutRedirectLambda', {
-      functionName: 'Checkout Redirect Lambda',
+      functionName: 'CheckoutRedirectLambda',
       runtime: Runtime.NODEJS_18_X,
       entry: path.resolve('lambdas/checkoutRedirect/handler.ts'),
       handler: 'handler',
