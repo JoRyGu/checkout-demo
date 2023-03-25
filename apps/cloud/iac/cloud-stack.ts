@@ -12,11 +12,17 @@ import { Construct } from 'constructs';
 import { Duration } from 'aws-cdk-lib';
 import { Bucket, BucketAccessControl } from 'aws-cdk-lib/aws-s3';
 import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
+import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
 
 export class CloudStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
+    // Secrets
+    const stripeSecret = new Secret(this, 'StripeSecret', {
+      secretName: 'StripeSecret',
+    });
 
+    // API Gateway
     const restApi = new RestApi(this, 'CheckoutDemoRestApi', {
       restApiName: 'CheckoutDemo',
       defaultCorsPreflightOptions: {
@@ -40,6 +46,8 @@ export class CloudStack extends cdk.Stack {
       },
     });
 
+    stripeSecret.grantRead(redirectLambda);
+
     const redirectLambdaIntegration = new LambdaIntegration(redirectLambda);
     const redirectApiResource = restApi.root.addResource('api');
     const redirectGatewayResource = redirectApiResource.addResource('checkout');
@@ -48,6 +56,7 @@ export class CloudStack extends cdk.Stack {
       redirectLambdaIntegration
     );
 
+    // Buckets
     const clientBucket = new Bucket(this, 'CheckoutDemoClientBucket', {
       bucketName: 'checkout-demo-client-bucket',
       publicReadAccess: true,
