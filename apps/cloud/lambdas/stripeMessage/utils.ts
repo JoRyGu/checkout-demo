@@ -164,6 +164,7 @@ export const upsertPayment = async (
         quantity: { N: paymentDetails.quantity.toString() },
         requestor: { S: paymentDetails.requestor ?? '' },
         viewed: { S: paymentDetails.viewed },
+        paid: { S: paymentDetails.paid },
       },
     })
   );
