@@ -42,7 +42,7 @@ export class CloudStack extends cdk.Stack {
       handler: 'handler',
       timeout: Duration.seconds(30),
       bundling: {
-        nodeModules: ['zod'],
+        nodeModules: ['zod', 'stripe', '@aws-sdk/client-secrets-manager'],
       },
     });
 
