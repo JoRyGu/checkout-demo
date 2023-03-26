@@ -4,7 +4,7 @@ import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
 import { CheckoutRestApi } from './CheckoutRestApi';
 import { CheckoutStripeMessageQueue } from './CheckoutStripeMessageQueue';
 import { CheckoutFrontEndDeployment } from './CheckoutFrontEndDeployment';
-import { AttributeType, Table } from 'aws-cdk-lib/aws-dynamodb';
+import { AttributeType, BillingMode, Table } from 'aws-cdk-lib/aws-dynamodb';
 
 export class CloudStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -24,8 +24,29 @@ export class CloudStack extends cdk.Stack {
       {
         tableName: 'CheckoutStripeIdempotencyTable',
         partitionKey: { name: 'idempotencyKey', type: AttributeType.STRING },
+        billingMode: BillingMode.PAY_PER_REQUEST,
       }
     );
+    const paymentRequestsTable = new Table(
+      this,
+      'CheckoutPaymentRequestsTable',
+      {
+        tableName: 'CheckoutPaymentRequestsTable',
+        partitionKey: { name: 'paymentIntentId', type: AttributeType.STRING },
+        sortKey: { name: 'transactionDate', type: AttributeType.STRING },
+        billingMode: BillingMode.PAY_PER_REQUEST,
+      }
+    );
+    paymentRequestsTable.addGlobalSecondaryIndex({
+      indexName: 'viewedIndex',
+      partitionKey: { name: 'viewed', type: AttributeType.STRING },
+      sortKey: { name: 'transactionDate', type: AttributeType.STRING },
+    });
+    paymentRequestsTable.addGlobalSecondaryIndex({
+      indexName: 'paidIndex',
+      partitionKey: { name: 'paid', type: AttributeType.STRING },
+      sortKey: { name: 'transactionDate', type: AttributeType.STRING },
+    });
 
     // SQS
     const stripeMessageQueue = new CheckoutStripeMessageQueue(this);
@@ -34,6 +55,9 @@ export class CloudStack extends cdk.Stack {
     );
     stripeMessageQueue.grantLambdaPermission((lambda) =>
       stripeIdempotencyTable.grantReadWriteData(lambda)
+    );
+    stripeMessageQueue.grantLambdaPermission((lambda) =>
+      paymentRequestsTable.grantReadWriteData(lambda)
     );
 
     // Api Gateway

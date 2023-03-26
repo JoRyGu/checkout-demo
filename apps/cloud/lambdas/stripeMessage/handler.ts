@@ -9,6 +9,7 @@ import {
   getPaymentDetails,
   mergeDuplicateMessages,
   processIdempotency,
+  upsertPayment,
 } from './utils';
 
 const getStripeSecret = async (client: SecretsManagerClient) => {
@@ -41,10 +42,9 @@ export const handler: SQSHandler = async (event) => {
       idempontentEvents.map((event) => getPaymentDetails(stripe, event))
     );
 
-    console.log({
-      msg: 'Retrieved payment intents',
-      paymentIntents: JSON.stringify(paymentDetails, null, 2),
-    });
+    await Promise.all(
+      paymentDetails.map((payment) => upsertPayment(dynamoClient, payment))
+    );
 
     console.log({
       msg: 'Processed Stripe messages',

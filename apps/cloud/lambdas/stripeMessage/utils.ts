@@ -6,6 +6,20 @@ import {
 import { SQSRecord } from 'aws-lambda';
 import Stripe from 'stripe';
 
+export type PaymentDetails = {
+  paymentIntentId: string;
+  transactionDate: string;
+  item: string;
+  subtotal: number;
+  tax: number;
+  total: number;
+  discount: number;
+  quantity: number;
+  requestor?: string;
+  viewed: string;
+  paid: string;
+};
+
 export const parseStripeMessage = (record: SQSRecord) => {
   return JSON.parse(record.body) as Stripe.Event;
 };
@@ -127,6 +141,30 @@ export const getPaymentDetails = async (
     discount: paymentDetails.amount_discount,
     quantity: paymentDetails.quantity,
     requestor: checkoutSession.customer_details?.name,
-    viewed: false,
-  };
+    viewed: 'false',
+    paid: eventData.status === 'succeeded' ? 'true' : 'false',
+  } as PaymentDetails;
+};
+
+export const upsertPayment = async (
+  dynamoClient: DynamoDBClient,
+  paymentDetails: PaymentDetails
+) => {
+  await dynamoClient.send(
+    new PutItemCommand({
+      TableName: 'CheckoutStripeIdempotencyTable',
+      Item: {
+        paymentIntentId: { S: paymentDetails.paymentIntentId },
+        transactionDate: { S: paymentDetails.transactionDate },
+        item: { S: paymentDetails.item },
+        subtotal: { N: paymentDetails.subtotal.toString() },
+        tax: { N: paymentDetails.tax.toString() },
+        total: { N: paymentDetails.total.toString() },
+        discount: { N: paymentDetails.discount.toString() },
+        quantity: { N: paymentDetails.quantity.toString() },
+        requestor: { S: paymentDetails.requestor ?? '' },
+        viewed: { S: paymentDetails.viewed },
+      },
+    })
+  );
 };
