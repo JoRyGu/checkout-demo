@@ -94,9 +94,9 @@ export class CloudStack extends cdk.Stack {
     // SQS Lambdas
     const stripeMessageLambda = new NodejsFunction(
       this,
-      'StripeMessageLambda',
+      'CheckoutStripeMessageLambda',
       {
-        functionName: 'StripeMessageLambda',
+        functionName: 'CheckoutStripeMessageLambda',
         runtime: Runtime.NODEJS_18_X,
         entry: path.resolve('lambdas/stripeMessage/handler.ts'),
         handler: 'handler',
