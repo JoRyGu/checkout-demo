@@ -10,12 +10,18 @@ import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { Construct } from 'constructs';
 import { Duration } from 'aws-cdk-lib';
-import { Bucket, BucketAccessControl } from 'aws-cdk-lib/aws-s3';
+import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
 import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
 import { Queue } from 'aws-cdk-lib/aws-sqs';
 import { SqsDestination } from 'aws-cdk-lib/aws-lambda-destinations';
 import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
+import {
+  Effect,
+  PolicyStatement,
+  Role,
+  ServicePrincipal,
+} from 'aws-cdk-lib/aws-iam';
 
 export class CloudStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -26,6 +32,14 @@ export class CloudStack extends cdk.Stack {
     });
     const stripeWebhookSecret = new Secret(this, 'StripeWebhookSecret', {
       secretName: 'StripeWebhookSecret',
+    });
+
+    // SQS
+    const stripeMessageQueue = new Queue(this, 'CheckoutStripeMessageQueue', {
+      queueName: 'CheckoutStripeMessageQueue',
+    });
+    const stripeMessageDlq = new Queue(this, 'CheckoutStripeMessageDlq', {
+      queueName: 'CheckoutStripeMessageDlq',
     });
 
     // API Gateway
@@ -54,6 +68,23 @@ export class CloudStack extends cdk.Stack {
       },
     });
 
+    const stripeMessageLambdaRole = new Role(
+      this,
+      'CheckoutStripeMessageLambdaRole',
+      {
+        assumedBy: new ServicePrincipal('lambda.amazonaws.com'),
+      }
+    );
+    const stripeMessageLambdaPolicy = new PolicyStatement({
+      actions: ['sqs:SendMessage'],
+      effect: Effect.ALLOW,
+      resources: [stripeMessageQueue.queueArn],
+    });
+    stripeMessageLambdaPolicy.addCondition('ArnEquals', {
+      'aws:SourceArn': stripeMessageQueue.queueArn,
+    });
+    stripeMessageLambdaRole.addToPolicy(stripeMessageLambdaPolicy);
+
     const stripeWebhookLambda = new NodejsFunction(
       this,
       'CheckoutStripeWebhookLambda',
@@ -63,8 +94,13 @@ export class CloudStack extends cdk.Stack {
         entry: path.resolve('lambdas/stripeWebhook/handler.ts'),
         handler: 'handler',
         timeout: Duration.seconds(30),
+        role: stripeMessageLambdaRole,
         bundling: {
-          nodeModules: ['stripe', '@aws-sdk/client-secrets-manager'],
+          nodeModules: [
+            'stripe',
+            '@aws-sdk/client-secrets-manager',
+            '@aws-sdk/client-sqs',
+          ],
         },
       }
     );
@@ -82,14 +118,6 @@ export class CloudStack extends cdk.Stack {
     );
     const stripeWebhookApiResource = apiResource.addResource('stripehook');
     stripeWebhookApiResource.addMethod('POST', stripeWebhookLambdaIntegration);
-
-    // SQS
-    const stripeMessageQueue = new Queue(this, 'StripeMessageQueue', {
-      queueName: 'StripeMessageQueue',
-    });
-    const stripeMessageDlq = new Queue(this, 'StripeMessageDlq', {
-      queueName: 'StripeMessageDlq',
-    });
 
     // SQS Lambdas
     const stripeMessageLambda = new NodejsFunction(

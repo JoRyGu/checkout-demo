@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-secrets-manager": "3.299.0",
+    "@aws-sdk/client-sqs": "3.299.0",
     "aws-cdk-lib": "2.66.1",
     "constructs": "^10.0.0",
     "source-map-support": "^0.5.21",

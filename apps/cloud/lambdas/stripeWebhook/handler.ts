@@ -2,6 +2,11 @@ import {
   GetSecretValueCommand,
   SecretsManagerClient,
 } from '@aws-sdk/client-secrets-manager';
+import {
+  SendMessageCommand,
+  SQSClient,
+  GetQueueUrlCommand,
+} from '@aws-sdk/client-sqs';
 import Stripe from 'stripe';
 import { APIGatewayProxyHandler } from 'aws-lambda';
 import { jsonResponse } from '../../lib/jsonResponse';
@@ -18,6 +23,19 @@ const getStripeWebhookSecret = async (client: SecretsManagerClient) => {
   });
   const result = await client.send(command);
   return result.SecretString;
+};
+
+const publishEventToQueue = async (event: Stripe.Event) => {
+  const sqs = new SQSClient({ region: 'us-east-1' });
+  const queueUrlOutput = await sqs.send(
+    new GetQueueUrlCommand({ QueueName: 'CheckoutStripeMessageQueue' })
+  );
+  await sqs.send(
+    new SendMessageCommand({
+      QueueUrl: queueUrlOutput.QueueUrl,
+      MessageBody: JSON.stringify(event),
+    })
+  );
 };
 
 export const handler: APIGatewayProxyHandler = async (event) => {
@@ -51,18 +69,16 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       stripeWebhookSecret
     );
 
-    switch (stripeEvent.type) {
-      case 'payment_intent.created':
-        console.log(stripeEvent.data.object);
-        break;
-      case 'payment_intent.succeeded':
-        console.log(stripeEvent.data.object);
-        break;
+    if (
+      stripeEvent.type === 'payment_intent.succeeded' ||
+      stripeEvent.type === 'payment_intent.created'
+    ) {
+      await publishEventToQueue(stripeEvent);
     }
 
     return jsonResponse(200, { success: true });
   } catch (err) {
-    console.error({ msg: 'Error verifying webhook signature', err });
+    console.error({ msg: 'Error processing webhook request', err });
     return jsonResponse(400, { message: 'Bad Request' });
   }
 };
