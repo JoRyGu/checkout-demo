@@ -60,6 +60,9 @@ export class CloudStack extends cdk.Stack {
         entry: path.resolve('lambdas/stripeWebhook/handler.ts'),
         handler: 'handler',
         timeout: Duration.seconds(30),
+        bundling: {
+          nodeModules: ['stripe', '@aws-sdk/client-secrets-manager'],
+        },
       }
     );
 
