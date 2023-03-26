@@ -30,6 +30,9 @@ export class CheckoutStripeMessageQueue {
         entry: path.resolve('lambdas/stripeMessage/handler.ts'),
         handler: 'handler',
         timeout: Duration.seconds(30),
+        bundling: {
+          nodeModules: ['@aws-sdk/client-dynamodb'],
+        },
         onFailure: new SqsDestination(stripeMessageDlq),
       }
     );

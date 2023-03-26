@@ -4,6 +4,7 @@ import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
 import { CheckoutRestApi } from './CheckoutRestApi';
 import { CheckoutStripeMessageQueue } from './CheckoutStripeMessageQueue';
 import { CheckoutFrontEndDeployment } from './CheckoutFrontEndDeployment';
+import { AttributeType, Table } from 'aws-cdk-lib/aws-dynamodb';
 
 export class CloudStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -16,10 +17,23 @@ export class CloudStack extends cdk.Stack {
       secretName: 'StripeWebhookSecret',
     });
 
+    // Dynamo Tables
+    const stripeIdempotencyTable = new Table(
+      this,
+      'CheckoutStripeIdempotencyTable',
+      {
+        tableName: 'CheckoutStripeIdempotencyTable',
+        partitionKey: { name: 'idempotencyKey', type: AttributeType.STRING },
+      }
+    );
+
     // SQS
     const stripeMessageQueue = new CheckoutStripeMessageQueue(this);
     stripeMessageQueue.grantLambdaPermission((lambda) =>
       stripeSecret.grantRead(lambda)
+    );
+    stripeMessageQueue.grantLambdaPermission((lambda) =>
+      stripeIdempotencyTable.grantReadWriteData(lambda)
     );
 
     // Api Gateway
