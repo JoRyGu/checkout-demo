@@ -41,7 +41,10 @@ export const handler: SQSHandler = async (event) => {
       idempontentEvents.map((event) => getPaymentIntent(stripe, event))
     );
 
-    console.log({ msg: 'Retrieved payment intents', paymentIntents });
+    console.log({
+      msg: 'Retrieved payment intents',
+      paymentIntents: JSON.stringify(paymentIntents, null, 2),
+    });
 
     console.log({
       msg: 'Processed Stripe messages',

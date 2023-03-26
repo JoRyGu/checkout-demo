@@ -111,7 +111,7 @@ export const getPaymentIntent = async (
   const paymentIntent = await stripeClient.paymentIntents.retrieve(
     eventData.id,
     {
-      expand: ['customer', 'description', 'invoice', 'payment_method'],
+      expand: ['customer', 'invoice', 'payment_method'],
     }
   );
 
