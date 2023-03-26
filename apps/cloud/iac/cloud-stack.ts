@@ -111,6 +111,8 @@ export class CloudStack extends cdk.Stack {
       }
     );
 
+    stripeMessageQueue.grantSendMessages(stripeWebhookLambda);
+
     stripeSecret.grantRead(redirectLambda);
     stripeSecret.grantRead(stripeWebhookLambda);
     stripeWebhookSecret.grantRead(stripeWebhookLambda);
