@@ -83,6 +83,7 @@ export const handler: APIGatewayProxyHandler = async (event, _context) => {
   const stripe = new Stripe(stripeKey, { apiVersion: '2022-11-15' });
 
   const session = await stripe.checkout.sessions.create({
+    payment_method_types: ['card'],
     line_items: [
       {
         price_data: {
@@ -103,6 +104,10 @@ export const handler: APIGatewayProxyHandler = async (event, _context) => {
     ],
     mode: 'payment',
     success_url: 'https://checkout-demo.jgude.dev/success',
+    cancel_url: 'https://checkout-demo.jgude.dev',
+    payment_intent_data: {
+      capture_method: 'manual',
+    },
   });
 
   return jsonResponse(303, null, { Location: session.url! });
