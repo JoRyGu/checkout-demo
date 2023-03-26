@@ -13,6 +13,9 @@ import { Duration } from 'aws-cdk-lib';
 import { Bucket, BucketAccessControl } from 'aws-cdk-lib/aws-s3';
 import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
 import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
+import { Queue } from 'aws-cdk-lib/aws-sqs';
+import { SqsDestination } from 'aws-cdk-lib/aws-lambda-destinations';
+import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 
 export class CloudStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -39,7 +42,7 @@ export class CloudStack extends cdk.Stack {
     });
     const apiResource = restApi.root.addResource('api');
 
-    // Lambdas
+    // API Gateway Lambdas
     const redirectLambda = new NodejsFunction(this, 'CheckoutRedirectLambda', {
       functionName: 'CheckoutRedirectLambda',
       runtime: Runtime.NODEJS_18_X,
@@ -79,6 +82,31 @@ export class CloudStack extends cdk.Stack {
     );
     const stripeWebhookApiResource = apiResource.addResource('stripehook');
     stripeWebhookApiResource.addMethod('POST', stripeWebhookLambdaIntegration);
+
+    // SQS
+    const stripeMessageQueue = new Queue(this, 'StripeMessageQueue', {
+      queueName: 'StripeMessageQueue',
+    });
+    const stripeMessageDlq = new Queue(this, 'StripeMessageDlq', {
+      queueName: 'StripeMessageDlq',
+    });
+
+    // SQS Lambdas
+    const stripeMessageLambda = new NodejsFunction(
+      this,
+      'StripeMessageLambda',
+      {
+        functionName: 'StripeMessageLambda',
+        runtime: Runtime.NODEJS_18_X,
+        entry: path.resolve('lambdas/stripeMessage/handler.ts'),
+        handler: 'handler',
+        timeout: Duration.seconds(30),
+        onFailure: new SqsDestination(stripeMessageDlq),
+      }
+    );
+
+    stripeMessageLambda.addEventSource(new SqsEventSource(stripeMessageQueue));
+    stripeSecret.grantRead(stripeMessageLambda);
 
     // Buckets
     const clientBucket = new Bucket(this, 'CheckoutDemoClientBucket', {
