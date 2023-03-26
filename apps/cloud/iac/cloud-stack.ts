@@ -21,6 +21,9 @@ export class CloudStack extends cdk.Stack {
     const stripeSecret = new Secret(this, 'StripeSecret', {
       secretName: 'StripeSecret',
     });
+    const stripeWebhookSecret = new Secret(this, 'StripeWebhookSecret', {
+      secretName: 'StripeWebhookSecret',
+    });
 
     // API Gateway
     const restApi = new RestApi(this, 'CheckoutDemoRestApi', {
@@ -62,6 +65,7 @@ export class CloudStack extends cdk.Stack {
 
     stripeSecret.grantRead(redirectLambda);
     stripeSecret.grantRead(stripeWebhookLambda);
+    stripeWebhookSecret.grantRead(stripeWebhookLambda);
 
     const redirectLambdaIntegration = new LambdaIntegration(redirectLambda);
     const redirectGatewayResource = apiResource.addResource('checkout');
