@@ -69,28 +69,6 @@ export class CloudStack extends cdk.Stack {
       },
     });
 
-    const stripeMessageLambdaRole = new Role(
-      this,
-      'CheckoutStripeMessageLambdaRole',
-      {
-        assumedBy: new ServicePrincipal('lambda.amazonaws.com'),
-      }
-    );
-    const stripeMessageLambdaPolicy = new PolicyStatement({
-      actions: ['sqs:SendMessage'],
-      effect: Effect.ALLOW,
-      resources: [stripeMessageQueue.queueArn],
-    });
-    stripeMessageLambdaPolicy.addCondition('ArnEquals', {
-      'aws:SourceArn': stripeMessageQueue.queueArn,
-    });
-    stripeMessageLambdaRole.addManagedPolicy(
-      ManagedPolicy.fromAwsManagedPolicyName(
-        'service-role/AWSLambdaBasicExecutionRole'
-      )
-    );
-    stripeMessageLambdaRole.addToPolicy(stripeMessageLambdaPolicy);
-
     const stripeWebhookLambda = new NodejsFunction(
       this,
       'CheckoutStripeWebhookLambda',
@@ -100,7 +78,6 @@ export class CloudStack extends cdk.Stack {
         entry: path.resolve('lambdas/stripeWebhook/handler.ts'),
         handler: 'handler',
         timeout: Duration.seconds(30),
-        role: stripeMessageLambdaRole,
         bundling: {
           nodeModules: [
             'stripe',
