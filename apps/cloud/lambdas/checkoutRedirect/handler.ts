@@ -103,6 +103,9 @@ export const handler: APIGatewayProxyHandler = async (event, _context) => {
       },
     ],
     mode: 'payment',
+    automatic_tax: {
+      enabled: true,
+    },
     success_url: 'https://checkout-demo.jgude.dev/success',
     cancel_url: 'https://checkout-demo.jgude.dev',
     payment_intent_data: {
