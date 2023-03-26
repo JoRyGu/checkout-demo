@@ -34,7 +34,9 @@ export class CloudStack extends cdk.Stack {
         types: [EndpointType.REGIONAL],
       },
     });
+    const apiResource = restApi.root.addResource('api');
 
+    // Lambdas
     const redirectLambda = new NodejsFunction(this, 'CheckoutRedirectLambda', {
       functionName: 'CheckoutRedirectLambda',
       runtime: Runtime.NODEJS_18_X,
@@ -46,15 +48,30 @@ export class CloudStack extends cdk.Stack {
       },
     });
 
+    const stripeWebhookLambda = new NodejsFunction(
+      this,
+      'CheckoutStripeWebhookLambda',
+      {
+        functionName: 'CheckoutStripeWebhookLambda',
+        runtime: Runtime.NODEJS_18_X,
+        entry: path.resolve('lambdas/stripeWebhook/handler.ts'),
+        handler: 'handler',
+        timeout: Duration.seconds(30),
+      }
+    );
+
     stripeSecret.grantRead(redirectLambda);
+    stripeSecret.grantRead(stripeWebhookLambda);
 
     const redirectLambdaIntegration = new LambdaIntegration(redirectLambda);
-    const redirectApiResource = restApi.root.addResource('api');
-    const redirectGatewayResource = redirectApiResource.addResource('checkout');
-    const redirectGatewayMethod = redirectGatewayResource.addMethod(
-      'POST',
-      redirectLambdaIntegration
+    const redirectGatewayResource = apiResource.addResource('checkout');
+    redirectGatewayResource.addMethod('POST', redirectLambdaIntegration);
+
+    const stripeWebhookLambdaIntegration = new LambdaIntegration(
+      stripeWebhookLambda
     );
+    const stripeWebhookApiResource = apiResource.addResource('stripehook');
+    stripeWebhookApiResource.addMethod('POST', stripeWebhookLambdaIntegration);
 
     // Buckets
     const clientBucket = new Bucket(this, 'CheckoutDemoClientBucket', {
