@@ -51,6 +51,10 @@ export const verifyIdempotency = async (
     })
   );
 
+  if (response.Item) {
+    console.log({ msg: 'Duplicate event found', event });
+  }
+
   return !response.Item;
 };
 
