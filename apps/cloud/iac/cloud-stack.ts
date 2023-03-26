@@ -18,6 +18,7 @@ import { SqsDestination } from 'aws-cdk-lib/aws-lambda-destinations';
 import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 import {
   Effect,
+  ManagedPolicy,
   PolicyStatement,
   Role,
   ServicePrincipal,
@@ -83,6 +84,11 @@ export class CloudStack extends cdk.Stack {
     stripeMessageLambdaPolicy.addCondition('ArnEquals', {
       'aws:SourceArn': stripeMessageQueue.queueArn,
     });
+    stripeMessageLambdaRole.addManagedPolicy(
+      ManagedPolicy.fromAwsManagedPolicyName(
+        'service-role/AWSLambdaBasicExecutionRole'
+      )
+    );
     stripeMessageLambdaRole.addToPolicy(stripeMessageLambdaPolicy);
 
     const stripeWebhookLambda = new NodejsFunction(
