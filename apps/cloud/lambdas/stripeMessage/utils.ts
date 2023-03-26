@@ -111,5 +111,9 @@ export const getPaymentIntent = async (
   const sessions = await stripeClient.checkout.sessions.list({
     payment_intent: eventData.id,
   });
-  return sessions;
+  const checkoutSession = sessions.data[0];
+  const lineItems = await stripeClient.checkout.sessions.listLineItems(
+    checkoutSession.id
+  );
+  return lineItems;
 };
