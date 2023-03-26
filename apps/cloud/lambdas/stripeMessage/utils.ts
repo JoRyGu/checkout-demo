@@ -103,7 +103,7 @@ export const processIdempotency = async (
   });
 };
 
-export const getPaymentIntent = async (
+export const getPaymentDetails = async (
   stripeClient: Stripe,
   event: Stripe.Event
 ) => {
@@ -115,5 +115,18 @@ export const getPaymentIntent = async (
   const lineItems = await stripeClient.checkout.sessions.listLineItems(
     checkoutSession.id
   );
-  return lineItems;
+  const paymentDetails = lineItems.data[0];
+
+  return {
+    paymentIntentId: eventData.id,
+    transactionDate: new Date(checkoutSession.created * 1000).toISOString(),
+    item: paymentDetails.description,
+    subtotal: paymentDetails.amount_subtotal,
+    tax: paymentDetails.amount_tax,
+    total: paymentDetails.amount_total,
+    discount: paymentDetails.amount_discount,
+    quantity: paymentDetails.quantity,
+    requestor: checkoutSession.customer_details?.name,
+    viewed: false,
+  };
 };

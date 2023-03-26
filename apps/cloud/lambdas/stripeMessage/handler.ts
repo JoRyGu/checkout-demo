@@ -6,7 +6,7 @@ import {
 import { SQSHandler } from 'aws-lambda';
 import Stripe from 'stripe';
 import {
-  getPaymentIntent,
+  getPaymentDetails,
   mergeDuplicateMessages,
   processIdempotency,
 } from './utils';
@@ -37,13 +37,13 @@ export const handler: SQSHandler = async (event) => {
 
     const stripe = new Stripe(stripeSecret, { apiVersion: '2022-11-15' });
 
-    const paymentIntents = await Promise.all(
-      idempontentEvents.map((event) => getPaymentIntent(stripe, event))
+    const paymentDetails = await Promise.all(
+      idempontentEvents.map((event) => getPaymentDetails(stripe, event))
     );
 
     console.log({
       msg: 'Retrieved payment intents',
-      paymentIntents: JSON.stringify(paymentIntents, null, 2),
+      paymentIntents: JSON.stringify(paymentDetails, null, 2),
     });
 
     console.log({
