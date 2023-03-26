@@ -108,12 +108,8 @@ export const getPaymentIntent = async (
   event: Stripe.Event
 ) => {
   const eventData = event.data.object as Stripe.PaymentIntent;
-  const paymentIntent = await stripeClient.paymentIntents.retrieve(
-    eventData.id,
-    {
-      expand: ['customer', 'invoice', 'payment_method'],
-    }
-  );
-
-  return paymentIntent;
+  const sessions = await stripeClient.checkout.sessions.list({
+    payment_intent: eventData.id,
+  });
+  return sessions;
 };
