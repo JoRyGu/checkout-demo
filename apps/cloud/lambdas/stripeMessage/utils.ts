@@ -152,7 +152,7 @@ export const upsertPayment = async (
 ) => {
   await dynamoClient.send(
     new PutItemCommand({
-      TableName: 'CheckoutStripeIdempotencyTable',
+      TableName: 'CheckoutPaymentRequestsTable',
       Item: {
         paymentIntentId: { S: paymentDetails.paymentIntentId },
         transactionDate: { S: paymentDetails.transactionDate },
