@@ -1,6 +1,21 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import {
+  GetSecretValueCommand,
+  SecretsManagerClient,
+} from '@aws-sdk/client-secrets-manager';
 import { SQSHandler } from 'aws-lambda';
-import { mergeDuplicateMessages, processIdempotency } from './utils';
+import Stripe from 'stripe';
+import {
+  getPaymentIntent,
+  mergeDuplicateMessages,
+  processIdempotency,
+} from './utils';
+
+const getStripeSecret = async (client: SecretsManagerClient) => {
+  const command = new GetSecretValueCommand({ SecretId: 'StripeSecret' });
+  const result = await client.send(command);
+  return result.SecretString;
+};
 
 export const handler: SQSHandler = async (event) => {
   try {
@@ -10,6 +25,23 @@ export const handler: SQSHandler = async (event) => {
       dynamoClient,
       stripeEvents
     );
+
+    const stripeSecret = await getStripeSecret(
+      new SecretsManagerClient({ region: 'us-east-1' })
+    );
+
+    if (!stripeSecret) {
+      console.error({ msg: 'Missing Stripe secrets' });
+      throw new Error('Missing Stripe secrets');
+    }
+
+    const stripe = new Stripe(stripeSecret, { apiVersion: '2022-11-15' });
+
+    const paymentIntents = await Promise.all(
+      idempontentEvents.map((event) => getPaymentIntent(stripe, event))
+    );
+
+    console.log({ msg: 'Retrieved payment intents', paymentIntents });
 
     console.log({
       msg: 'Processed Stripe messages',

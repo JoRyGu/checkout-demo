@@ -31,7 +31,10 @@ export class CheckoutStripeMessageQueue {
         handler: 'handler',
         timeout: Duration.seconds(30),
         bundling: {
-          nodeModules: ['@aws-sdk/client-dynamodb'],
+          nodeModules: [
+            '@aws-sdk/client-dynamodb',
+            '@aws-sdk/client-secrets-manager',
+          ],
         },
         onFailure: new SqsDestination(stripeMessageDlq),
       }

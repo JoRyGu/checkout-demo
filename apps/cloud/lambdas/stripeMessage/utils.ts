@@ -102,3 +102,18 @@ export const processIdempotency = async (
     return idempotencyResults[idx];
   });
 };
+
+export const getPaymentIntent = async (
+  stripeClient: Stripe,
+  event: Stripe.Event
+) => {
+  const eventData = event.data.object as Stripe.PaymentIntent;
+  const paymentIntent = await stripeClient.paymentIntents.retrieve(
+    eventData.id,
+    {
+      expand: ['customer', 'description', 'invoice', 'payment_method'],
+    }
+  );
+
+  return paymentIntent;
+};
