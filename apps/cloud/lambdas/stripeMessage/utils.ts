@@ -154,6 +154,7 @@ export const upsertPayment = async (
     new PutItemCommand({
       TableName: 'CheckoutPaymentRequestsTable',
       Item: {
+        sellerId: { S: 'test-seller-1' },
         paymentIntentId: { S: paymentDetails.paymentIntentId },
         transactionDate: { S: paymentDetails.transactionDate },
         item: { S: paymentDetails.item },

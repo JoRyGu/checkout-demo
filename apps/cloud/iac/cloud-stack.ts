@@ -32,7 +32,7 @@ export class CloudStack extends cdk.Stack {
       'CheckoutPaymentRequestsTable',
       {
         tableName: 'CheckoutPaymentRequestsTable',
-        partitionKey: { name: 'paymentIntentId', type: AttributeType.STRING },
+        partitionKey: { name: 'sellerId', type: AttributeType.STRING },
         sortKey: { name: 'transactionDate', type: AttributeType.STRING },
         billingMode: BillingMode.PAY_PER_REQUEST,
       }
