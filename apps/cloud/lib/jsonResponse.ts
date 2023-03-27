@@ -1,6 +1,6 @@
 export const jsonResponse = (
   statusCode: number,
-  body: Record<string, any> | null,
+  body: Record<string, any> | Record<string, any>[] | null,
   headers?: Record<string, string>
 ) => {
   return {

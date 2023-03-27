@@ -74,6 +74,9 @@ export class CloudStack extends cdk.Stack {
     restApi.grantPermission('stripeWebhook', (lambda) =>
       stripeMessageQueue.queue.grantSendMessages(lambda)
     );
+    restApi.grantPermission('paymentRequests', (lambda) =>
+      paymentRequestsTable.grantReadWriteData(lambda)
+    );
 
     // Buckets
     new CheckoutFrontEndDeployment(this);

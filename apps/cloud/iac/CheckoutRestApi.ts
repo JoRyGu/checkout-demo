@@ -13,6 +13,7 @@ import { Duration } from 'aws-cdk-lib';
 type CheckoutRestApiIntegrations = {
   checkoutRedirect: NodejsFunction;
   stripeWebhook: NodejsFunction;
+  paymentRequests: NodejsFunction;
 };
 
 export class CheckoutRestApi {
@@ -72,9 +73,32 @@ export class CheckoutRestApi {
     const stripeWebhookApiResource = apiResource.addResource('stripehook');
     stripeWebhookApiResource.addMethod('POST', stripeWebhookLambdaIntegration);
 
+    const paymentRequestsLambda = new NodejsFunction(
+      scope,
+      'CheckoutPaymentRequests',
+      {
+        functionName: 'CheckoutPaymentRequests',
+        runtime: Runtime.NODEJS_18_X,
+        entry: path.resolve('lambdas/paymentRequests/handler.ts'),
+        handler: 'handler',
+        timeout: Duration.seconds(30),
+        bundling: {
+          nodeModules: ['@aws-sdk/client-dynamodb', '@aws-sdk/lib-dynamodb'],
+        },
+      }
+    );
+    const paymentRequestsIntegration = new LambdaIntegration(
+      paymentRequestsLambda
+    );
+    const paymentRequestsApiResource =
+      apiResource.addResource('payment-requests');
+    paymentRequestsApiResource.addMethod('GET', paymentRequestsIntegration);
+    paymentRequestsApiResource.addMethod('PUT', paymentRequestsIntegration);
+
     this.lambdas = {
       checkoutRedirect: redirectLambda,
       stripeWebhook: stripeWebhookLambda,
+      paymentRequests: paymentRequestsLambda,
     };
   }
 
