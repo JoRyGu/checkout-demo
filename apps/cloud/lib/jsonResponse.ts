@@ -6,6 +6,10 @@ export const jsonResponse = (
   return {
     statusCode,
     body: JSON.stringify(body),
-    headers: headers ?? undefined,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      ...(headers ?? {}),
+    },
   };
 };
