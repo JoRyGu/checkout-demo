@@ -29,9 +29,9 @@ export class CloudStack extends cdk.Stack {
     );
     const paymentRequestsTable = new Table(
       this,
-      'CheckoutPaymentRequestsTable2',
+      'CheckoutPaymentRequestsTable',
       {
-        tableName: 'CheckoutPaymentRequestsTable2',
+        tableName: 'CheckoutPaymentRequestsTable',
         partitionKey: { name: 'sellerId', type: AttributeType.STRING },
         sortKey: { name: 'transactionDate', type: AttributeType.STRING },
         billingMode: BillingMode.PAY_PER_REQUEST,
