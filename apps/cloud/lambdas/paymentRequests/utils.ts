@@ -4,7 +4,7 @@ export const getLast10PaymentRequests = async (client: DynamoDBDocument) => {
   const res = await client.query({
     TableName: 'CheckoutPaymentRequestsTable',
     KeyConditionExpression: 'sellerId = :sellerId',
-    ExpressionAttributeValues: { ':sellerId': { S: 'test-seller-1' } },
+    ExpressionAttributeValues: { ':sellerId': 'test-seller-1' },
     Limit: 10,
     ScanIndexForward: false,
   });
